@@ -9,9 +9,8 @@ import java.io.FileNotFoundException;
 
 import android.net.Uri;
 
-import org.apache.commons.compress.archivers.ArchiveInputStream;
-import org.apache.commons.compress.archivers.ArchiveStreamFactory;
 import org.apache.commons.compress.archivers.zip.ZipArchiveEntry;
+import org.apache.commons.compress.archivers.zip.ZipArchiveInputStream;
 
 import org.apache.cordova.CallbackContext;
 import org.apache.cordova.CordovaPlugin;
@@ -111,7 +110,7 @@ public class Zip extends CordovaPlugin {
             }
 
             // The inputstream is now pointing at the start of the actual zip file content.
-            ArchiveInputStream zis = new ArchiveStreamFactory().createArchiveInputStream("zip", inputStream);
+            ZipArchiveInputStream zis = new ZipArchiveInputStream(inputStream, null, false, true);
             inputStream = zis;
 
             ZipArchiveEntry ze;
