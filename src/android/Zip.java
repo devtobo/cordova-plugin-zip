@@ -1,6 +1,13 @@
 package org.apache.cordova;
 
+import net.lingala.zip4j.core.ZipFile;
+import net.lingala.zip4j.exception.ZipException;
+import net.lingala.zip4j.io.ZipInputStream;
+import net.lingala.zip4j.model.FileHeader;
+import net.lingala.zip4j.unzip.UnzipUtil;
+
 import java.io.BufferedInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -37,7 +44,8 @@ public class Zip extends CordovaPlugin {
     private void unzip(final CordovaArgs args, final CallbackContext callbackContext) {
         this.cordova.getThreadPool().execute(new Runnable() {
             public void run() {
-                unzipSync(args, callbackContext);
+//                unzipSync(args, callbackContext);
+                unzipSync_zip4j(args, callbackContext);
             }
         });
     }
@@ -165,6 +173,42 @@ public class Zip extends CordovaPlugin {
             }
         }
     }
+
+
+	private final int BUFF_SIZE = 4096;
+	private void unzipSync_zip4j(CordovaArgs args, CallbackContext callbackContext) {
+		ZipInputStream is = null;
+		ByteArrayOutputStream os = null;
+		String logDetail= "";
+		boolean error = false;
+
+		try {
+			String zipFileName = args.getString(0);
+			String filePathToExtract = args.getString(1);
+			logDetail= "zip '" + zipFileName +"' pathToExtract '"+filePathToExtract+"'"; 
+			Log.w(LOG_TAG, "Extracting "+logDetail);
+
+			Uri zipUri = getUriForArg(zipFileName);
+			CordovaResourceApi resourceApi = webView.getResourceApi();
+			File asFile = resourceApi.mapUriToFile(zipUri);
+
+			ZipFile zipFile = new ZipFile(asFile);
+
+			zipFile.extractAll(filePathToExtract);
+		}
+		catch (Exception ex) {
+			Log.e(LOG_TAG, "EXCEPTION "+logDetail);
+			callbackContext.error("EXCEPTION: "+ex.toString());
+            error = true;
+		}
+		finally {
+			if (is!=null) { try { is.close(); } catch (IOException ex2) {} }
+		}
+
+		if (!error) {
+			callbackContext.success();
+		}
+	}
 
     private void updateProgress(CallbackContext callbackContext, ProgressEvent progress) throws JSONException {
         PluginResult pluginResult = new PluginResult(PluginResult.Status.OK, progress.toJSONObject());
