@@ -192,9 +192,19 @@ public class Zip extends CordovaPlugin {
 			CordovaResourceApi resourceApi = webView.getResourceApi();
 			File asFile = resourceApi.mapUriToFile(zipUri);
 
+			Uri outputUri = getUriForArg(filePathToExtract);
+            File outputDir = resourceApi.mapUriToFile(outputUri);
+
+            if (outputDir == null || (!outputDir.exists() && !outputDir.mkdirs())){
+                String errorMessage = "Could not create output directory";
+                callbackContext.error(errorMessage);
+                Log.e(LOG_TAG, errorMessage);
+                return;
+            }
+
 			ZipFile zipFile = new ZipFile(asFile);
 
-			zipFile.extractAll(filePathToExtract);
+			zipFile.extractAll(outputUri.getPath());
 		}
 		catch (Exception ex) {
 			Log.e(LOG_TAG, "EXCEPTION "+logDetail);
